@@ -19,9 +19,19 @@ class SignupController extends Controller
 
 
     function signupdone(Request $request){
+
         if(Auth::check()){
             return redirect("/Dashboard");
         }
+
+        // Validation
+        $request->validate([
+            'name' => 'required|string|min:2|max:50',
+            'family' => 'required|string|min:2|max:50',
+            'username' => 'required|string|min:3|max:50|unique:users_tbl,username',
+            'password' => 'required|string|min:6|confirmed',
+            'type' => 'required|in:admin,user,manager',
+        ]);
 
         //Get create new user
         $n_user = new users_tbl();

@@ -11,5 +11,15 @@
 
     <h3>Dashboard</h3>
 
+    <form method="post" action="/NReport" enctype="multipart/form-data">
+
+        @csrf
+        <input type="text" name="title" placeholder="Title">
+        <input type="text" name="text" placeholder="Text">
+        <input type="file" name="attach" accept=".pdf">
+
+        <button type="submit">Done</button>
+    </form>
+
 </body>
 </html>

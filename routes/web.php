@@ -15,5 +15,8 @@ Route::middleware(\App\Http\Middleware\UserLoginMiddleware::class)->group(functi
 
     Route::get('/Dashboard', [\App\Http\Controllers\DashboardController::class,'dashboard']);
 
+    Route::post('/NReport', [\App\Http\Controllers\ReportsController::class,'nreport']);
+    Route::get('/Report/Check/{id}', [\App\Http\Controllers\ReportsController::class,'CheckReport']);
+
 });
 
