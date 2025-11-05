@@ -11,7 +11,7 @@
 
     <form method="post">
 
-        <input type="hidden" value="{{csrf_token()}}" name="_token">
+        @csrf
         <input type="text" name="name" placeholder="Enter name">
         <input type="text" name="family" placeholder="Enter family">
         <input type="text" name="username" placeholder="Enter username">
@@ -19,7 +19,8 @@
 
         <select name="type">
             <option value="USER">User</option>
-            <option value="ADMIN">Admin</option>
+            <option value="ADMIN1">Admin 1 </option>
+            <option value="ADMIN2">Admin 2 </option>
         </select>
 
         <button type="submit">signup</button>

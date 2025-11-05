@@ -9,17 +9,7 @@
 </head>
 <body>
 
-    <form method="post">
-
-        @csrf
-        <input type="text" name="username" placeholder="Enter username">
-        <input type="password" name="password"  placeholder="Enter password">
-        <button type="submit">Login</button>
-
-        <br>
-        <a href="/Signup">Signup</a>
-
-    </form>
+    <h3>Dashboard</h3>
 
 </body>
 </html>
