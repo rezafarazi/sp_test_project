@@ -3,53 +3,44 @@
 </p>
 
 <p align="center">
-  <b>Simple Reports</b> — a minimal Laravel app showcasing auth, roles, and a small review workflow with file uploads.
+  <b>Simple Reports</b> — a small Laravel app that demonstrates authentication, role‑based dashboards, and a lightweight report review workflow with file uploads.
   <br/>
-  <a href="#-features">Features</a> · <a href="#-stack">Stack</a> · <a href="#-quick-start">Quick Start</a> · <a href="#-routes">Routes</a> · <a href="#-notes">Notes</a>
+  <a href="#-what-you-get">What you get</a> · <a href="#-stack">Stack</a> · <a href="#-quick-start">Quick Start</a> · <a href="#-routes">Routes</a> · <a href="#-development-notes">Notes</a>
 </p>
 
 ---
 
-### Overview
+## What you get
 
-This is a compact Laravel 12 project that demonstrates:
+- **Authentication**: session-based login/signup using Laravel guards
+- **Roles**: `USER`, `ADMIN1`, `ADMIN2`
+- **Reports**: users submit a report (title, text, optional PDF)
+- **Workflow**:
+  - `USER`: create reports
+  - `ADMIN1`: lists reports with status `0` (new) and marks them `1` (checked)
+  - `ADMIN2`: lists reports with status `1` and marks them `2` (finalized)
+- **File uploads**: stored on the `public` disk and downloadable via a public link
+- **SQLite by default** for easy local setup; **Docker** provided for MySQL/Redis/phpMyAdmin
 
-- Signup/Login using Laravel's auth guard (session-based)
-- Three roles: `USER`, `ADMIN1`, `ADMIN2`
-- Users can submit reports with an optional file (stored in `storage/app/public/reports`)
-- Admins can review and advance report status through a basic workflow
-
-The UI is intentionally minimal (plain Blade templates) to keep the focus on backend flow and correctness.
-
-### Features
-
-- Auth with basic middleware-protected dashboard
-- Role-based dashboards:
-  - `USER`: submit report (title, text, optional PDF)
-  - `ADMIN1`: see reports with status `0` (new) and mark as `1` (checked)
-  - `ADMIN2`: see reports with status `1` and mark as `2` (finalized)
-- File upload and public download via `storage` symlink
-- SQLite-ready by default (repo includes `database/database.sqlite`); Docker option for MySQL/Redis/phpMyAdmin
-
-### Stack
+## Stack
 
 - PHP 8.2, Laravel 12
-- Sanctum installed (not actively used in this demo)
-- Blade, Eloquent
+- Blade, Eloquent ORM
+- Laravel Sanctum installed (not used in this demo)
 - Docker images: `webdevops/php-nginx:8.2`, `mysql:8.0`, `phpmyadmin/phpmyadmin`, `redis:alpine`
 
-### Data Model
+## Data model
 
-- `users_tbls`: `id, name, family, username, password, start_datetime, last_edit_datetime, role`
-- `reports_tbls`: `id, title, text, file_addres, status, datetime`
+- `users_tbls` — `id, name, family, username, password, start_datetime, last_edit_datetime, role`
+- `reports_tbls` — `id, title, text, file_addres, status, datetime`
 
-Statuses: `0` = new, `1` = checked by `ADMIN1`, `2` = finalized by `ADMIN2`.
+Status legend: `0` new → `1` checked by `ADMIN1` → `2` finalized by `ADMIN2`.
 
 ---
 
 ## Quick Start
 
-You can run locally (Composer + PHP) or via Docker. Choose one.
+Choose one path: Local (SQLite) or Docker (MySQL).
 
 ### Local (SQLite)
 
@@ -60,24 +51,22 @@ composer install
 cp .env.example .env
 php artisan key:generate
 
-# Use SQLite (already included)
+# Ensure SQLite file exists and run migrations
 php -r "file_exists('database/database.sqlite') || touch('database/database.sqlite');"
 php artisan migrate --force
 
-# Make storage files publicly accessible
+# Expose uploaded files
 php artisan storage:link
 
-# (optional) Frontend
+# (optional) Frontend dev server (Vite)
 npm install
 npm run dev
 
-# Run the server
+# Start the app
 php artisan serve
 ```
 
-Open: `http://127.0.0.1:8000`
-
-Signup a user and choose a role (`USER`, `ADMIN1`, or `ADMIN2`).
+Visit `http://127.0.0.1:8000`. Use Signup to create a user and choose a role.
 
 ### Docker (MySQL + phpMyAdmin + Redis)
 
@@ -85,7 +74,7 @@ Signup a user and choose a role (`USER`, `ADMIN1`, or `ADMIN2`).
 docker compose up -d
 ```
 
-Then exec into the app container (or use your host if Composer is available) to install and migrate:
+Then initialize the app (inside the container or on host if Composer is available):
 
 ```bash
 docker exec -it laravel_app bash
@@ -93,7 +82,12 @@ composer install
 cp .env.example .env
 php artisan key:generate
 
-# Configure DB in .env to match docker-compose (host=db, user=laravel, pass=laravel, db=laravel)
+# Update .env to match docker-compose
+# DB_HOST=db
+# DB_DATABASE=laravel
+# DB_USERNAME=laravel
+# DB_PASSWORD=laravel
+
 php artisan migrate --force
 php artisan storage:link
 exit
@@ -111,21 +105,31 @@ Services:
 - `POST /` — authenticate
 - `GET /Signup` — signup form
 - `POST /Signup` — create user and login
-- `GET /Dashboard` — protected dashboard (role-aware)
-- `POST /NReport` — create report (USER)
+- `GET /Dashboard` — role-aware dashboard (protected)
+- `POST /NReport` — create a report (USER)
 - `GET /Report/Check/{id}` — advance report status (ADMIN1/ADMIN2)
 
-Middleware: `App\Http\Middleware\UserLoginMiddleware` protects the dashboard group.
+Protected by `App\Http\Middleware\UserLoginMiddleware`.
 
 ---
 
-## Development Notes
+## Project structure (high level)
 
-- Passwords are hashed using SHA-256 with a static salt in controllers. For production, prefer Laravel's `bcrypt`/`argon2id` via `Hash::make()` and migrations with `timestamps` and proper `datetime` columns.
-- Files are stored on the `public` disk under `reports/`. Ensure `php artisan storage:link` is executed to enable downloads.
-- Roles are selected at signup and used for conditional dashboards.
+- `routes/web.php` — route definitions
+- `app/Http/Controllers` — `LoginController`, `SignupController`, `DashboardController`, `ReportsController`
+- `app/Http/Middleware/UserLoginMiddleware.php` — enforces auth for dashboard group
+- `app/Models` — `users_tbl`, `reports_tbl`
+- `resources/views` — Blade views for login, signup, dashboards
+- `database/migrations` — schema for `users_tbls`, `reports_tbls`
+- `storage/app/public/reports` — uploaded files (via `public` disk)
 
 ---
+
+## Development notes
+
+- The demo hashes passwords with SHA‑256 + static salt inside controllers. For production, replace with Laravel `Hash::make()`/`Hash::check()` and proper password column length.
+- Timestamps are kept as strings in this demo to keep the schema simple. Prefer proper `timestamp`/`datetime` types and Eloquent `$timestamps = true` in real apps.
+- File downloads require `php artisan storage:link`.
 
 ## Testing
 
@@ -133,20 +137,8 @@ Middleware: `App\Http\Middleware\UserLoginMiddleware` protects the dashboard gro
 php artisan test
 ```
 
----
-
-## Project Structure (high-level)
-
-- `routes/web.php` — route definitions
-- `app/Http/Controllers` — auth, dashboard, reports controllers
-- `app/Http/Middleware/UserLoginMiddleware.php` — auth gate for dashboard
-- `app/Models` — Eloquent models `users_tbl`, `reports_tbl`
-- `resources/views` — Blade templates for login, signup, dashboards
-- `database/migrations` — schema for `users_tbls`, `reports_tbls`
-- `storage/app/public` — uploaded files (via `public` disk)
-
----
-
 ## License
 
 MIT
+
+
