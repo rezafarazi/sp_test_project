@@ -1,59 +1,152 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="360" alt="Laravel" />
 </p>
 
-## About Laravel
+<p align="center">
+  <b>Simple Reports</b> — a minimal Laravel app showcasing auth, roles, and a small review workflow with file uploads.
+  <br/>
+  <a href="#-features">Features</a> · <a href="#-stack">Stack</a> · <a href="#-quick-start">Quick Start</a> · <a href="#-routes">Routes</a> · <a href="#-notes">Notes</a>
+</p>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Overview
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+This is a compact Laravel 12 project that demonstrates:
 
-## Learning Laravel
+- Signup/Login using Laravel's auth guard (session-based)
+- Three roles: `USER`, `ADMIN1`, `ADMIN2`
+- Users can submit reports with an optional file (stored in `storage/app/public/reports`)
+- Admins can review and advance report status through a basic workflow
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+The UI is intentionally minimal (plain Blade templates) to keep the focus on backend flow and correctness.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Features
 
-## Laravel Sponsors
+- Auth with basic middleware-protected dashboard
+- Role-based dashboards:
+  - `USER`: submit report (title, text, optional PDF)
+  - `ADMIN1`: see reports with status `0` (new) and mark as `1` (checked)
+  - `ADMIN2`: see reports with status `1` and mark as `2` (finalized)
+- File upload and public download via `storage` symlink
+- SQLite-ready by default (repo includes `database/database.sqlite`); Docker option for MySQL/Redis/phpMyAdmin
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Stack
 
-### Premium Partners
+- PHP 8.2, Laravel 12
+- Sanctum installed (not actively used in this demo)
+- Blade, Eloquent
+- Docker images: `webdevops/php-nginx:8.2`, `mysql:8.0`, `phpmyadmin/phpmyadmin`, `redis:alpine`
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### Data Model
 
-## Contributing
+- `users_tbls`: `id, name, family, username, password, start_datetime, last_edit_datetime, role`
+- `reports_tbls`: `id, title, text, file_addres, status, datetime`
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Statuses: `0` = new, `1` = checked by `ADMIN1`, `2` = finalized by `ADMIN2`.
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Quick Start
 
-## Security Vulnerabilities
+You can run locally (Composer + PHP) or via Docker. Choose one.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Local (SQLite)
+
+Requirements: PHP 8.2+, Composer, Node 18+, npm
+
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+
+# Use SQLite (already included)
+php -r "file_exists('database/database.sqlite') || touch('database/database.sqlite');"
+php artisan migrate --force
+
+# Make storage files publicly accessible
+php artisan storage:link
+
+# (optional) Frontend
+npm install
+npm run dev
+
+# Run the server
+php artisan serve
+```
+
+Open: `http://127.0.0.1:8000`
+
+Signup a user and choose a role (`USER`, `ADMIN1`, or `ADMIN2`).
+
+### Docker (MySQL + phpMyAdmin + Redis)
+
+```bash
+docker compose up -d
+```
+
+Then exec into the app container (or use your host if Composer is available) to install and migrate:
+
+```bash
+docker exec -it laravel_app bash
+composer install
+cp .env.example .env
+php artisan key:generate
+
+# Configure DB in .env to match docker-compose (host=db, user=laravel, pass=laravel, db=laravel)
+php artisan migrate --force
+php artisan storage:link
+exit
+```
+
+Services:
+- App: `http://localhost:8080`
+- phpMyAdmin: `http://localhost:8081` (host: `db`, user: `root`, pass: `root`)
+
+---
+
+## Routes
+
+- `GET /` — login form
+- `POST /` — authenticate
+- `GET /Signup` — signup form
+- `POST /Signup` — create user and login
+- `GET /Dashboard` — protected dashboard (role-aware)
+- `POST /NReport` — create report (USER)
+- `GET /Report/Check/{id}` — advance report status (ADMIN1/ADMIN2)
+
+Middleware: `App\Http\Middleware\UserLoginMiddleware` protects the dashboard group.
+
+---
+
+## Development Notes
+
+- Passwords are hashed using SHA-256 with a static salt in controllers. For production, prefer Laravel's `bcrypt`/`argon2id` via `Hash::make()` and migrations with `timestamps` and proper `datetime` columns.
+- Files are stored on the `public` disk under `reports/`. Ensure `php artisan storage:link` is executed to enable downloads.
+- Roles are selected at signup and used for conditional dashboards.
+
+---
+
+## Testing
+
+```bash
+php artisan test
+```
+
+---
+
+## Project Structure (high-level)
+
+- `routes/web.php` — route definitions
+- `app/Http/Controllers` — auth, dashboard, reports controllers
+- `app/Http/Middleware/UserLoginMiddleware.php` — auth gate for dashboard
+- `app/Models` — Eloquent models `users_tbl`, `reports_tbl`
+- `resources/views` — Blade templates for login, signup, dashboards
+- `database/migrations` — schema for `users_tbls`, `reports_tbls`
+- `storage/app/public` — uploaded files (via `public` disk)
+
+---
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+MIT
