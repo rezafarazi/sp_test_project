@@ -131,12 +131,6 @@ Protected by `App\Http\Middleware\UserLoginMiddleware`.
 - Timestamps are kept as strings in this demo to keep the schema simple. Prefer proper `timestamp`/`datetime` types and Eloquent `$timestamps = true` in real apps.
 - File downloads require `php artisan storage:link`.
 
-## Testing
-
-```bash
-php artisan test
-```
-
 ## License
 
 MIT
